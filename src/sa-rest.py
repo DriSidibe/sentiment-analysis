@@ -152,7 +152,11 @@ def predict():
                     data['predictions'].append(pred)
 
                 data['success'] = True
-                return flask.jsonify(data);
+                return flask.jsonify(data)
+            
+@app.route('/', methods=['GET'])
+def home():
+    return flask.render_template("home.html")
 
 def main(argv):
     host = None

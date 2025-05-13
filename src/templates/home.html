@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        <!--boostrap cdn-->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    </head>
+    <body style="display: flex; justify-content: center; height: 100vh; width: 100vw; background-color: #f8f9fa;">
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+        <!--boostrap div-->
+        <div class="container" style="display: flex; justify-content: center; background-color: #ffffff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+            <div style="width: 100%; text-align: center;">
+                <h1>Sentiment Analysis</h1>
+                <form action="#" class="form-group">
+                    <div>
+                        <input type="text" name="texts" placeholder="Texte" class="form-control">
+                        <div id="text-list" style="display: flex; flex-direction: column; padding-top: 20px;">
+                            <!-- Les textes ajoutés seront affichés ici -->
+                        </div>
+                        <button onclick="add_text()" class="btn btn-success">add</button>
+                        <button onclick="clear_texts()" class="btn btn-danger">clear</button>
+                    </div>
+                    <div style="display: justify-content; padding-top: 50px;" >
+                        <button id="send-btn" onclick="send()" class="btn btn-primary">Envoyer</button>
+                    </div>
+                    <!-- respose shape: {
+                        "predictions": [
+                                {
+                                "lang": "en", 
+                                "sentiment": {
+                                    "label": "positiv", 
+                                    "probability": 0.9012099504470825
+                                }, 
+                                "text": "This film is exciting from the beginning to the end! The actors are really good!"
+                                }, 
+                                {
+                                "lang": "en", 
+                                "sentiment": {
+                                    "label": "negativ", 
+                                    "probability": 0.01829037070274353
+                                }, 
+                                "text": "This movie is boring from the beginning to the end! The actors are moderate to bad!"
+                                }
+                            ], 
+                        "success": true
+                        } 
+                    -->
+                    <table class="table table-striped" id="response-table">
+                        <thead>
+                            <tr>
+                                <th>Lang</th>
+                                <th>Sentiment</th>
+                                <th>Probabilité</th>
+                                <th>Texte</th>
+                            </tr>
+                        </thead>
+                        <tbody id="response">
+                            <!-- La réponse sera affichée ici -->
+                        </tbody>
+                </form>
+                <style>
+                    tr{
+                        text-align: left;
+                    }    
+                </style>
+            </div>
+            <script>
+                var texts = [];
+                function add_text() {
+                    // Prevent the form from submitting the traditional way
+                    event.preventDefault();
+                    var input = document.querySelector('input[name="texts"]');
+                    var text = input.value;
+                    if (text) {
+                        texts.push(text);
+                        input.value = '';
+                        var textList = document.getElementById('text-list');
+                        var textItem = document.createElement('p');
+                        textItem.textContent = text;
+                        textList.appendChild(textItem);
+                    } else {
+                        alert('Please enter a text');
+                    }
+                }
+                function send() {
+                    var sendBtn = document.getElementById('send-btn');
+                    sendBtn.innerHTML = 'Loading...';
+                    sendBtn.disabled = true; // Disable the button to prevent multiple clicks
+                    // Check if there are texts to send
+                    if (texts.length === 0) {
+                        alert('Please add at least one text');
+                        sendBtn.innerHTML = 'Envoyer';
+                        sendBtn.disabled = false; // Re-enable the button
+                        return;
+                    }
+                    // Prevent the form from submitting the traditional way
+                    event.preventDefault();
+                    var form = document.querySelector('form');
+                    var formData = new FormData(form);
+                    fetch('/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' // C'est ici qu'on précise JSON
+                        },
+                        body: JSON.stringify({ texts: texts })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        var responseBody = document.getElementById('response');
+                        responseBody.innerHTML = ''; // Clear previous responses
+                        data.predictions.forEach(prediction => {
+                            var row = document.createElement('tr');
+                            var langCell = document.createElement('td');
+                            langCell.textContent = prediction.lang;
+                            var sentimentCell = document.createElement('td');
+                            sentimentCell.textContent = prediction.sentiment.label;
+                            var probabilityCell = document.createElement('td');
+                            probabilityCell.textContent = prediction.sentiment.probability;
+                            var textCell = document.createElement('td');
+                            textCell.textContent = prediction.text;
+                            row.appendChild(langCell);
+                            row.appendChild(sentimentCell);
+                            row.appendChild(probabilityCell);
+                            row.appendChild(textCell);
+                            responseBody.appendChild(row);
+                        });
+                        sendBtn.innerHTML = 'Envoyer';
+                        sendBtn.disabled = false;
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+                function clear_texts() {
+                    // Prevent the form from submitting the traditional way
+                    event.preventDefault();
+                    texts = [];
+                    var textList = document.getElementById('text-list');
+                    textList.innerHTML = ''; // Clear the displayed texts
+                }
+            </script>
+        </div>
+        
+        
+        <script src="" async defer></script>
+    </body>
+</html>
